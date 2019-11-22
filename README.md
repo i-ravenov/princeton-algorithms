@@ -1,2 +1,2 @@
 # princeton-algorithms
-Coursera online course offered by Princeton University (Robert Sedgewick and Kevin Wayne)
+Coursera online algorithms course offered by Princeton University (Robert Sedgewick and Kevin Wayne)
