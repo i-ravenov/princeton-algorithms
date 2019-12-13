@@ -3,6 +3,7 @@ out/
 
 ## Dir-based project format:
 .idea/
+.lift/
 
 ## File-based project format:
 *.ipr
@@ -28,3 +29,6 @@ local.properties
 ## Locally stored "Eclipse launch configurations"
 *.launch
 
+*.txt
+*.class
+*.png
