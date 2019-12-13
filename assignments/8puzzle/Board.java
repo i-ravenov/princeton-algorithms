@@ -2,7 +2,11 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Board {
+
 
     private final int[][] board;
     private final int[][] goal;
@@ -48,6 +52,10 @@ public class Board {
         int h = 0;
         for (int i = 0; i < sz; i++) {
             for (int j = 0; j < sz; j++) {
+                if (board[i][j] == 0) {
+                    continue;
+                }
+
                 if (board[i][j] != goal[i][j]) {
                     h++;
                 }
@@ -102,9 +110,9 @@ public class Board {
             return false;
         }
 
-        for (int i = 0; i < this.sz; i++) {
-            for (int j = 0; j < this.sz; j++) {
-                if(yBoard.board[i][j] != this.board[i][j]) {
+        for (int i = 0; i < sz; i++) {
+            for (int j = 0; j < sz; j++) {
+                if(yBoard.board[i][j] != board[i][j]) {
                     return false;
                 }
             }
@@ -114,19 +122,64 @@ public class Board {
 
     // all neighboring boards
     public Iterable<Board> neighbors() {
-        return null;
+        List<Board> neighbours = new ArrayList<>();
+        int blank = findBlank();
+        int blankI = blank/sz;
+        int blankJ = blank%sz;
+
+        if (blankI - 1 >= 0) {
+            int upTile = (blankI - 1)*sz + blankJ;
+            neighbours.add(switchTiles(upTile, blank));
+        }
+
+        if (blankI + 1 < sz) {
+            int lowTile = (blankI + 1)*sz + blankJ;
+            neighbours.add(switchTiles(lowTile, blank));
+        }
+
+        if (blankJ - 1 >= 0) {
+            int leftTile = blankI*sz + blankJ - 1;
+            neighbours.add(switchTiles(leftTile, blank));
+        }
+
+        if (blankJ + 1 < sz) {
+            int rightTile = blankI*sz + blankJ + 1;
+            neighbours.add(switchTiles(rightTile, blank));
+        }
+
+        return neighbours;
+    }
+
+    private int findBlank() {
+        int blank = -1;
+        for (int i = 0; i < sz; i++) {
+            for (int j = 0; j < sz; j++) {
+                if (board[i][j] == 0) {
+                    blank = sz*i + j;
+                }
+            }
+        }
+        return blank;
+    }
+
+    private Board switchTiles(int tile1, int tile2) {
+        int[][] switched = new int[sz][sz];
+
+        for (int i = 0; i < sz; i++) {
+            for (int j = 0; j < sz; j++) {
+                switched[i][j] = board[i][j];
+            }
+        }
+
+        int temp = switched[tile1/sz][tile1%sz];
+        switched[tile1/sz][tile1%sz] = switched[tile2/sz][tile2%sz];
+        switched[tile2/sz][tile2%sz] = temp;
+
+        return new Board(switched);
     }
 
     // a board that is obtained by exchanging any pair of tiles
     public Board twin() {
-        int[][] twin = new int[sz][sz];
-
-        for (int i = 0; i < sz; i++) {
-            for (int j = 0; j < sz; j++) {
-                twin[i][j] = board[i][j];
-            }
-        }
-
         int randTile1;
         int randTile2;
         do {
@@ -135,12 +188,7 @@ public class Board {
         } while (randTile1 == randTile2 || board[randTile1/sz][randTile1%sz] == 0
                                         || board[randTile2/sz][randTile2%sz] == 0);
 
-
-        int temp = twin[randTile1/sz][randTile1%sz];
-        twin[randTile1/sz][randTile1%sz] = twin[randTile2/sz][randTile2%sz];
-        twin[randTile2/sz][randTile2%sz] = temp;
-
-        return new Board(twin);
+        return switchTiles(randTile1, randTile2);
     }
 
     // unit testing (not graded)
@@ -158,9 +206,12 @@ public class Board {
         Board b = new Board(tiles);
         StdOut.println(b.toString());
         StdOut.println(b.manhattan());
+        StdOut.println(b.hamming());
         StdOut.println(b.isGoal());
 
-        StdOut.println();
-        StdOut.println(b.twin().toString());
+        for (Board nghbr : b.neighbors()) {
+            StdOut.println();
+            StdOut.println(nghbr);
+        }
     }
 }
