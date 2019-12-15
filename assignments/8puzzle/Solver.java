@@ -5,28 +5,58 @@
  **************************************************************************** */
 
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Solver {
 
+    private SearchNode end;
+
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
+        SearchNode start = new SearchNode(initial);
+        MinPQ<SearchNode> openSet = new MinPQ<>();
+        openSet.insert(start);
+
+        end = start;
+
+        while (!openSet.isEmpty()) {
+            SearchNode minimal = openSet.delMin();
+
+            if (minimal.isGoalNode()) {
+                end = minimal;
+                break;
+            }
+            for (SearchNode neighbour : minimal.getAllNeighbours()) {
+                openSet.insert(neighbour);
+            }
+        }
 
     }
 
-    // is the initial board solvable? (see below)
+    // is the initial board solvable?
     public boolean isSolvable() {
-        return false;
+        return end.isGoalNode();
     }
 
     // min number of moves to solve initial board
     public int moves() {
-        return 0;
+        return end.getMovesMade();
     }
 
     // sequence of boards in a shortest solution
     public Iterable<Board> solution() {
-        return null;
+        List<Board> solution = new ArrayList<>();
+        while (end.currentNode != null) {
+            solution.add(end.currentNode);
+            end.currentNode = end.previousNode;
+        }
+        Collections.reverse(solution);
+        return solution;
     }
 
     // test client (see below)
@@ -52,6 +82,47 @@ public class Solver {
             StdOut.println("Minimum number of moves = " + solver.moves());
             for (Board board : solver.solution())
                 StdOut.println(board);
+        }
+    }
+
+    private class SearchNode implements Comparable<SearchNode> {
+
+        private Board currentNode;
+        private Board previousNode;
+        private int movesMade;
+
+        public SearchNode() {
+            this(null, null, 0);
+        }
+
+        public SearchNode(Board start) {
+            this(start, null, 0);
+        }
+
+        public SearchNode(Board currNode, Board prevNode, int moves) {
+            currentNode = currNode;
+            previousNode = prevNode;
+            movesMade = moves;
+        }
+
+        public List<SearchNode> getAllNeighbours() {
+            List<SearchNode> nodes = new ArrayList<>();
+            for (Board next : currentNode.neighbors()) {
+                nodes.add(new SearchNode(next, currentNode, movesMade + 1));
+            }
+            return nodes;
+        }
+
+        public boolean isGoalNode() {
+            return currentNode.isGoal();
+        }
+
+        public int getMovesMade() {
+            return movesMade;
+        }
+
+        public int compareTo(SearchNode searchNode) {
+            return this.currentNode.hamming() - searchNode.currentNode.hamming();
         }
     }
 }
