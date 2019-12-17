@@ -1,9 +1,3 @@
-/* *****************************************************************************
- *  Name:
- *  Date:
- *  Description:
- **************************************************************************** */
-
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
@@ -51,9 +45,10 @@ public class Solver {
     // sequence of boards in a shortest solution
     public Iterable<Board> solution() {
         List<Board> solution = new ArrayList<>();
-        while (end.currentNode != null) {
-            solution.add(end.currentNode);
-            end.currentNode = end.previousNode;
+        SearchNode temp = end;
+        while (temp != null) {
+            solution.add(temp.board);
+            temp = temp.previousNode;
         }
         Collections.reverse(solution);
         return solution;
@@ -87,34 +82,30 @@ public class Solver {
 
     private class SearchNode implements Comparable<SearchNode> {
 
-        private Board currentNode;
-        private Board previousNode;
+        private SearchNode previousNode;
+        private Board board;
         private int movesMade;
-
-        public SearchNode() {
-            this(null, null, 0);
-        }
 
         public SearchNode(Board start) {
             this(start, null, 0);
         }
 
-        public SearchNode(Board currNode, Board prevNode, int moves) {
-            currentNode = currNode;
-            previousNode = prevNode;
+        public SearchNode(Board board, SearchNode searchNode, int moves) {
+            this.board = board;
+            previousNode = searchNode;
             movesMade = moves;
         }
 
         public List<SearchNode> getAllNeighbours() {
             List<SearchNode> nodes = new ArrayList<>();
-            for (Board next : currentNode.neighbors()) {
-                nodes.add(new SearchNode(next, currentNode, movesMade + 1));
+            for (Board next : board.neighbors()) {
+                nodes.add(new SearchNode(next, this, movesMade + 1));
             }
             return nodes;
         }
 
         public boolean isGoalNode() {
-            return currentNode.isGoal();
+            return board.isGoal();
         }
 
         public int getMovesMade() {
@@ -122,7 +113,8 @@ public class Solver {
         }
 
         public int compareTo(SearchNode searchNode) {
-            return this.currentNode.hamming() - searchNode.currentNode.hamming();
+            return this.board.hamming() + this.movesMade
+                    - (searchNode.board.hamming() + searchNode.movesMade);
         }
     }
 }
