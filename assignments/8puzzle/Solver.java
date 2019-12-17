@@ -9,24 +9,47 @@ import java.util.List;
 public class Solver {
 
     private SearchNode end;
+    private boolean isSolvable;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
+        if (initial == null) {
+            throw new IllegalArgumentException();
+        }
+
         SearchNode start = new SearchNode(initial);
+        SearchNode twinStart = new SearchNode(initial.twin());
+
         MinPQ<SearchNode> openSet = new MinPQ<>();
+        MinPQ<SearchNode> openSetTwin = new MinPQ<>();
+
         openSet.insert(start);
+        openSetTwin.insert(twinStart);
 
         end = start;
 
-        while (!openSet.isEmpty()) {
-            SearchNode minimal = openSet.delMin();
+        while (!openSet.isEmpty() || !openSetTwin.isEmpty()) {
+            //TODO: refactor
+            SearchNode min = openSet.delMin();
+            SearchNode minTwin = openSetTwin.delMin();
 
-            if (minimal.isGoalNode()) {
-                end = minimal;
+            if (min.isGoalNode()) {
+                end = min;
+                isSolvable = true;
                 break;
             }
-            for (SearchNode neighbour : minimal.getAllNeighbours()) {
+
+            if (minTwin.isGoalNode()) {
+                isSolvable = false;
+                break;
+            }
+
+            for (SearchNode neighbour : min.getAllNeighbours()) {
                 openSet.insert(neighbour);
+            }
+
+            for (SearchNode neighbour : minTwin.getAllNeighbours()) {
+                openSetTwin.insert(neighbour);
             }
         }
 
@@ -34,12 +57,12 @@ public class Solver {
 
     // is the initial board solvable?
     public boolean isSolvable() {
-        return end.isGoalNode();
+        return isSolvable;
     }
 
     // min number of moves to solve initial board
     public int moves() {
-        return end.getMovesMade();
+        return end.movesMade;
     }
 
     // sequence of boards in a shortest solution
@@ -55,7 +78,6 @@ public class Solver {
     }
 
     // test client (see below)
-
     public static void main(String[] args) {
 
         // create initial board from file
@@ -108,13 +130,9 @@ public class Solver {
             return board.isGoal();
         }
 
-        public int getMovesMade() {
-            return movesMade;
-        }
-
         public int compareTo(SearchNode searchNode) {
-            return this.board.hamming() + this.movesMade
-                    - (searchNode.board.hamming() + searchNode.movesMade);
+            return this.board.manhattan() + this.movesMade
+                    - (searchNode.board.manhattan() + searchNode.movesMade);
         }
     }
 }
