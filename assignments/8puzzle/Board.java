@@ -7,9 +7,8 @@ import java.util.List;
 
 public class Board {
 
-
     private final int[][] board;
-    private final int[][] goal;
+    private final int[][] twin;
 
     private final int sz;
 
@@ -18,14 +17,21 @@ public class Board {
     public Board(int[][] tiles) {
         sz = tiles.length;
         board = new int[sz][sz];
-        goal = new int[sz][sz];
         for (int i = 0; i < sz; i++) {
             for (int j = 0; j < sz; j++) {
-                goal[i][j] =  j + i*sz + 1;
                 board[i][j] = tiles[i][j];
             }
         }
-        goal[sz-1][sz-1] = 0;
+
+        int randTile1;
+        int randTile2;
+        do {
+            randTile1 = StdRandom.uniform(sz*sz);
+            randTile2 = StdRandom.uniform(sz*sz);
+        } while (randTile1 == randTile2 || board[randTile1/sz][randTile1 % sz] == 0
+                || board[randTile2/sz][randTile2 % sz] == 0);
+
+        twin = switchTiles(randTile1, randTile2);
     }
 
     // string representation of this board
@@ -56,7 +62,7 @@ public class Board {
                     continue;
                 }
 
-                if (board[i][j] != goal[i][j]) {
+                if (board[i][j] != j + i*sz + 1) {
                     h++;
                 }
             }
@@ -112,7 +118,7 @@ public class Board {
 
         for (int i = 0; i < sz; i++) {
             for (int j = 0; j < sz; j++) {
-                if(yBoard.board[i][j] != board[i][j]) {
+                if (yBoard.board[i][j] != board[i][j]) {
                     return false;
                 }
             }
@@ -125,26 +131,26 @@ public class Board {
         List<Board> neighbours = new ArrayList<>();
         int blank = findBlank();
         int blankI = blank/sz;
-        int blankJ = blank%sz;
+        int blankJ = blank % sz;
 
         if (blankI - 1 >= 0) {
             int upTile = (blankI - 1)*sz + blankJ;
-            neighbours.add(switchTiles(upTile, blank));
+            neighbours.add(new Board(switchTiles(upTile, blank)));
         }
 
         if (blankI + 1 < sz) {
             int lowTile = (blankI + 1)*sz + blankJ;
-            neighbours.add(switchTiles(lowTile, blank));
+            neighbours.add(new Board(switchTiles(lowTile, blank)));
         }
 
         if (blankJ - 1 >= 0) {
             int leftTile = blankI*sz + blankJ - 1;
-            neighbours.add(switchTiles(leftTile, blank));
+            neighbours.add(new Board(switchTiles(leftTile, blank)));
         }
 
         if (blankJ + 1 < sz) {
             int rightTile = blankI*sz + blankJ + 1;
-            neighbours.add(switchTiles(rightTile, blank));
+            neighbours.add(new Board(switchTiles(rightTile, blank)));
         }
 
         return neighbours;
@@ -162,7 +168,12 @@ public class Board {
         return blank;
     }
 
-    private Board switchTiles(int tile1, int tile2) {
+    // a board that is obtained by exchanging any pair of tiles
+    public Board twin() {
+        return new Board(twin);
+    }
+
+    private int[][] switchTiles(int tile1, int tile2) {
         int[][] switched = new int[sz][sz];
 
         for (int i = 0; i < sz; i++) {
@@ -171,24 +182,11 @@ public class Board {
             }
         }
 
-        int temp = switched[tile1/sz][tile1%sz];
-        switched[tile1/sz][tile1%sz] = switched[tile2/sz][tile2%sz];
-        switched[tile2/sz][tile2%sz] = temp;
+        int temp = switched[tile1/sz][tile1 % sz];
+        switched[tile1/sz][tile1 % sz] = switched[tile2/sz][tile2 % sz];
+        switched[tile2/sz][tile2 % sz] = temp;
 
-        return new Board(switched);
-    }
-
-    // a board that is obtained by exchanging any pair of tiles
-    public Board twin() {
-        int randTile1;
-        int randTile2;
-        do {
-            randTile1 = StdRandom.uniform(sz*sz);
-            randTile2 = StdRandom.uniform(sz*sz);
-        } while (randTile1 == randTile2 || board[randTile1/sz][randTile1%sz] == 0
-                                        || board[randTile2/sz][randTile2%sz] == 0);
-
-        return switchTiles(randTile1, randTile2);
+        return switched;
     }
 
     // unit testing (not graded)

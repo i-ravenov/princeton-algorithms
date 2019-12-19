@@ -29,7 +29,6 @@ public class Solver {
         end = start;
 
         while (!openSet.isEmpty() || !openSetTwin.isEmpty()) {
-            //TODO: refactor
             SearchNode min = openSet.delMin();
             SearchNode minTwin = openSetTwin.delMin();
 
@@ -107,20 +106,26 @@ public class Solver {
         private SearchNode previousNode;
         private Board board;
         private int movesMade;
+        private int priority;
 
         public SearchNode(Board start) {
             this(start, null, 0);
+            priority = priority(this);
         }
 
         public SearchNode(Board board, SearchNode searchNode, int moves) {
             this.board = board;
-            previousNode = searchNode;
-            movesMade = moves;
+            this.previousNode = searchNode;
+            this.movesMade = moves;
+            priority = priority(this);
         }
 
         public List<SearchNode> getAllNeighbours() {
             List<SearchNode> nodes = new ArrayList<>();
             for (Board next : board.neighbors()) {
+                if (previousNode != null && next.equals(previousNode.board)) {
+                    continue;
+                }
                 nodes.add(new SearchNode(next, this, movesMade + 1));
             }
             return nodes;
@@ -130,9 +135,12 @@ public class Solver {
             return board.isGoal();
         }
 
-        public int compareTo(SearchNode searchNode) {
-            return this.board.manhattan() + this.movesMade
-                    - (searchNode.board.manhattan() + searchNode.movesMade);
+        public int compareTo(SearchNode sn) {
+            return this.priority - sn.priority;
+        }
+
+        private int priority(SearchNode sn) {
+            return sn.board.manhattan() + sn.movesMade;
         }
     }
 }
